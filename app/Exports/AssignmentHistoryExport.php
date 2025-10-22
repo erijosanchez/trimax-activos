@@ -4,7 +4,7 @@ namespace App\Exports;
 
 use App\Models\Asset;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithHeadings;    
 use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AssignmentHistoryExport implements FromCollection, WithHeadings, WithMapping
