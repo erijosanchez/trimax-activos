@@ -1,36 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sistema de Activos</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        nav { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
-        nav a { margin-right: 15px; text-decoration: none; color: #333; }
-        nav a:hover { text-decoration: underline; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f0f0f0; }
-        .btn { padding: 5px 10px; text-decoration: none; background: #007bff; color: white; border: none; cursor: pointer; }
-        .btn:hover { background: #0056b3; }
-        .btn-success { background: #28a745; }
-        .btn-danger { background: #dc3545; }
-        .btn-warning { background: #ffc107; color: #333; }
-        .alert { padding: 10px; margin: 10px 0; border-radius: 3px; }
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-error { background: #f8d7da; color: #721c24; }
-        form { max-width: 600px; }
-        input, select, textarea { width: 100%; padding: 5px; margin: 5px 0 15px 0; }
-        label { font-weight: bold; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activos - Trimax</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+
 </head>
 <body>
-    <nav>
-        <a href="{{ route('dashboard') }}">Dashboard</a>
-        <a href="{{ route('assets.index') }}">Activos</a>
-        <a href="{{ route('employees.index') }}">Empleados</a>
-        <a href="{{ route('assignments.index') }}">Asignaciones</a>
-        <a href="{{ route('reports.index') }}">Reportes</a>
+    <!-- Navbar móvil -->
+    <nav class="mobile-navbar">
+        <h3><i class="fas fa-boxes"></i> Inventario</h3>
+        <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
     </nav>
+
+    <!-- Overlay para cerrar sidebar en móvil -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+     <!-- Sidebar de Navegación -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-boxes"></i> Trimax </h3>
+            <small style="opacity: 0.7;">Sistema de Gestión</small>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('dashboard') }}" onclick="closeSidebarMobile()">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('assets.index') }}" onclick="closeSidebarMobile()">
+                    <i class="fas fa-box"></i>
+                    <span>Activos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('employees.index') }}" onclick="closeSidebarMobile()">
+                    <i class="fas fa-users"></i>
+                    <span>Empleados</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('assignments.index') }}" onclick="closeSidebarMobile()">
+                    <i class="fas fa-cog"></i>
+                    <span>Asignaciones</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('reports.index') }}" onclick="closeSidebarMobile()">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reportes</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
