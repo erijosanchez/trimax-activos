@@ -24,7 +24,7 @@
      <!-- Sidebar de Navegación -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h3><i class="fas fa-boxes"></i> Trimax </h3>
+            <img src="{{ asset('assets/img/LOGOTIPO TRIMAX 2025-01 (1).png') }}" alt="">
             <small style="opacity: 0.7;">Sistema de Gestión</small>
         </div>
         <ul class="nav flex-column">
@@ -35,7 +35,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('assets.index') }}" onclick="closeSidebarMobile()">
+                <a class="nav-link" href="{{ route('asset.index') }}" onclick="closeSidebarMobile()">
                     <i class="fas fa-box"></i>
                     <span>Activos</span>
                 </a>

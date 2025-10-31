@@ -118,20 +118,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-
-                        <div class="dashboard-wrapper">
-                            <div class="iframe-container" id="dashboardContainer">
-                                <div class="loading" id="loading">
-                                    <div class="spinner"></div>
-                                    <p>Cargando dashboard...</p>
-                                </div>
-                                <!-- 🔥 REEMPLAZA ESTE LINK CON TU LINK DE POWER BI -->
-                                <iframe id="powerbiFrame"
-                                    src="https://app.powerbi.com/view?r=eyJrIjoiMWQ1NzdmN2UtODI4NC00YmI2LTgyYjgtMTJiNTU5MWY2NTY1IiwidCI6ImQ0NDVlNWFiLWUxMmUtNDI0OC05ZWY3LTAzMjFjMWQ5MDM0MiJ9"
-                                    allowFullScreen="true" onload="hideLoading()">
-                                </iframe>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

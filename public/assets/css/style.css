@@ -71,9 +71,8 @@ body {
     margin-bottom: 1rem;
 }
 
-.sidebar-header h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
+.sidebar-header img {
+    width: 10rem;
 }
 
 .sidebar .nav-link {

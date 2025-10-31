@@ -12,7 +12,7 @@ use App\Http\Controllers\ReportController;
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 // Activos
-Route::resource('assets', AssetController::class);
+Route::resource('asset', AssetController::class);
 
 // Empleados
 Route::resource('employees', EmployeeController::class);
