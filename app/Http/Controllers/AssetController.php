@@ -97,7 +97,7 @@ class AssetController extends Controller
 
         Asset::create($validated);
 
-        return redirect()->route('assets.index')
+        return redirect()->route('asset.index')
             ->with('success', 'Activo creado exitosamente');
     }
 
@@ -188,7 +188,7 @@ class AssetController extends Controller
 
         $asset->update($validated);
 
-        return redirect()->route('assets.show', $asset)
+        return redirect()->route('asset.show', $asset)
             ->with('success', 'Activo actualizado exitosamente');
     }
 
@@ -203,7 +203,7 @@ class AssetController extends Controller
 
         $asset->delete();
 
-        return redirect()->route('assets.index')
+        return redirect()->route('asset.index')
             ->with('success', 'Activo eliminado exitosamente');
     }
 }
