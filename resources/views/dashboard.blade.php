@@ -81,9 +81,9 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <h5 class="mb-0"><i class="fas fa-list me-2"></i>Últimas Asignaciones</h5>
-                        <button class="btn btn-primary btn-sm mt-2 mt-md-0">
-                            <i class="fas fa-plus me-2"></i>Agregar Producto
-                        </button>
+                        <a href="{{ route('assignments.create') }}" class="btn btn-primary btn-sm mt-2 mt-md-0">
+                            <i class="fas fa-plus me-2"></i>Nueva Asignación
+                        </a>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -107,12 +107,9 @@
                                         <td class="hide-mobile">{{ $assignment->assigned_date->format('d/m/Y') }}</td>
                                         <td><span class="badge bg-success">{{ $assignment->usage_days }} días</span></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary btn-action me-1">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning btn-action">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                            <a href="{{ route('assignments.show', $assignment) }}"
+                                                class="btn btn-sm btn-outline-primary btn-action me-1"><i
+                                                    class="fas fa-eye"></i></a>
                                         </td>
                                     </tr>
                                 @endforeach
