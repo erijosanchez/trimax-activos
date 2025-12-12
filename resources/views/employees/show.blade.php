@@ -36,7 +36,7 @@
                                         <td>{{ $employee->phone }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Departamento:</th>
+                                        <th>Area:</th>
                                         <td>{{ $employee->department }}</td>
                                     </tr>
                                     <tr>

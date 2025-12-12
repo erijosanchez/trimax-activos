@@ -26,8 +26,17 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Código: *</label>
-                            <input type="text" class="form-control" name="code" value="{{ old('code') }}" required>
+                            <label class="form-label">Código:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="code" id="asset-code"
+                                    value="{{ old('code') }}" placeholder="Se generará automáticamente">
+                                <button type="button" class="btn btn-outline-secondary" id="preview-code"
+                                    title="Ver próximo código">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Formato: GMSAC202500001 (Se genera automáticamente si se deja
+                                vacío)</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Marca: *</label>
@@ -265,6 +274,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             const categorySelect = document.getElementById('category_id');
             const allCategoryFields = document.querySelectorAll('.category-fields');
+
+            // Vista previa del próximo código
+            const previewCodeBtn = document.getElementById('preview-code');
+            const codeInput = document.getElementById('asset-code');
+
+            previewCodeBtn.addEventListener('click', function() {
+                fetch('{{ route('asset.next-code') }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        codeInput.value = data.code;
+                        codeInput.classList.add('bg-light');
+                        setTimeout(() => {
+                            codeInput.classList.remove('bg-light');
+                        }, 1000);
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
 
             // Mapeo de campos por categoría
             const fieldMappings = {

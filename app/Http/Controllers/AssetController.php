@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Asset;
 use App\Models\Category;
+use App\Models\Assignment;
 
 class AssetController extends Controller
 {
@@ -36,7 +37,7 @@ class AssetController extends Controller
     {
         $rules = [
             'category_id' => 'required|exists:categories,id',
-            'code' => 'required|unique:assets',
+            'code' => 'nullable|unique:assets',
             'brand' => 'required|string|max:255',
             'model' => 'required|string|max:255',
             'serial_number' => 'nullable|unique:assets|string|max:255',
@@ -205,5 +206,96 @@ class AssetController extends Controller
 
         return redirect()->route('asset.index')
             ->with('success', 'Activo eliminado exitosamente');
+    }
+
+    /**
+     * Generar código de barras para un activo
+     */
+    public function generateBarcode(Asset $asset)
+    {
+        // Generar código de barras usando una librería
+        $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+        $barcode = $generator->getBarcode($asset->code, $generator::TYPE_CODE_128);
+
+        return response($barcode)
+            ->header('Content-Type', 'image/png');
+    }
+
+    /**
+     * Descargar código de barras con formato para imprimir
+     */
+    public function downloadBarcode(Asset $asset)
+    {
+        $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+        $barcode = $generator->getBarcode($asset->code, $generator::TYPE_CODE_128, 3, 100);
+
+        // Crear una imagen con el código de barras y el texto
+        $barcodeImage = imagecreatefromstring($barcode);
+        $width = imagesx($barcodeImage);
+        $height = imagesy($barcodeImage);
+
+        // Crear imagen con espacio para texto
+        $finalHeight = $height + 60;
+        $finalImage = imagecreatetruecolor($width + 40, $finalHeight);
+
+        // Fondo blanco
+        $white = imagecolorallocate($finalImage, 255, 255, 255);
+        $black = imagecolorallocate($finalImage, 0, 0, 0);
+        imagefill($finalImage, 0, 0, $white);
+
+        // Copiar código de barras
+        imagecopy($finalImage, $barcodeImage, 20, 10, 0, 0, $width, $height);
+
+        // Agregar texto del código
+        $font = 5;
+        $textWidth = imagefontwidth($font) * strlen($asset->code);
+        $x = (($width + 40) - $textWidth) / 2;
+        imagestring($finalImage, $font, $x, $height + 20, $asset->code, $black);
+
+        // Agregar información adicional
+        $info = $asset->brand . ' - ' . $asset->model;
+        $infoWidth = imagefontwidth($font) * strlen($info);
+        $infoX = (($width + 40) - $infoWidth) / 2;
+        imagestring($finalImage, $font, $infoX, $height + 40, $info, $black);
+
+        // Generar imagen
+        ob_start();
+        imagepng($finalImage);
+        $imageData = ob_get_clean();
+
+        imagedestroy($barcodeImage);
+        imagedestroy($finalImage);
+
+        return response($imageData)
+            ->header('Content-Type', 'image/png')
+            ->header('Content-Disposition', 'attachment; filename="barcode-' . $asset->code . '.png"');
+    }
+
+    /**
+     * Descargar múltiples códigos de barras en PDF
+     */
+    public function downloadBarcodesPDF(Request $request)
+    {
+        $assetIds = $request->input('asset_ids', []);
+
+        if (empty($assetIds)) {
+            return back()->with('error', 'Seleccione al menos un activo');
+        }
+
+        $assets = Asset::whereIn('id', $assetIds)->get();
+
+        $pdf = \PDF::loadView('assets.barcodes-pdf', compact('assets'));
+
+        return $pdf->download('codigos-barras-' . date('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Obtener el siguiente código que se generaría
+     */
+    public function getNextCode()
+    {
+        return response()->json([
+            'code' => Asset::getNextCode()
+        ]);
     }
 }

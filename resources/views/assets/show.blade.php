@@ -41,6 +41,17 @@
                                     </tr>
                                 </table>
                             </div>
+
+                            <!-- Código de barras -->
+                            <div class="text-center mt-4 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                                <h6 class="mb-3"><i class="fas fa-barcode"></i> Código de Barras</h6>
+                                <img src="{{ route('asset.barcode', $asset) }}" alt="Código de barras"
+                                    class="img-fluid mb-2" style="max-width: 250px;">
+                                <br>
+                                <a href="{{ route('asset.barcode.download', $asset) }}" class="btn btn-sm btn-success mt-2">
+                                    <i class="fas fa-download"></i> Descargar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

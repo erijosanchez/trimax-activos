@@ -7,9 +7,17 @@
                 <h2 class="mb-1">Activos</h2>
             </div>
 
-            <div class="mb-3 d-flex gap-2 ">
-                <a href="{{ route('reports.assets.export') }}" class="btn btn-warning animated-entry">Exportar a Excel <i
-                        class="fas fa-file-excel"></i> </a>
+            <div class="mb-3 d-flex gap-2 align-items-center">
+                <a href="{{ route('reports.assets.export') }}" class="btn btn-warning animated-entry">
+                    <i class="fas fa-file-excel"></i> Exportar a Excel
+                </a>
+                <button type="button" id="download-barcodes-btn" class="btn btn-success animated-entry"
+                    style="display: none;">
+                    <i class="fas fa-barcode"></i> Descargar Códigos de Barras Seleccionados
+                </button>
+                <button type="button" id="select-all-btn" class="btn btn-outline-secondary animated-entry">
+                    <i class="fas fa-check-square"></i> Seleccionar Todos
+                </button>
             </div>
             <div class="table-card animated-entry" style="animation-delay: 0.5s;">
                 <div class="card-header">
@@ -26,6 +34,9 @@
                         <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
+                                    <th width="50">
+                                        <input type="checkbox" id="select-all-checkbox" class="form-check-input">
+                                    </th>
                                     <th>Código</th>
                                     <th>Categoría</th>
                                     <th>Marca</th>
@@ -39,6 +50,10 @@
                             <tbody>
                                 @forelse($assets as $asset)
                                     <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input asset-checkbox"
+                                                value="{{ $asset->id }}" data-code="{{ $asset->code }}">
+                                        </td>
                                         <td>{{ $asset->code }}</td>
                                         <td>{{ $asset->category->name }}</td>
                                         <td>{{ $asset->brand }}</td>
@@ -93,24 +108,35 @@
                                         </td>
                                         <td>
                                             <a class="btn btn-sm btn-outline-primary btn-action me-1"
-                                                href="{{ route('asset.show', $asset) }}"><i class="fas fa-eye"></i></a> |
+                                                href="{{ route('asset.show', $asset) }}" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a class="btn btn-sm btn-outline-success btn-action me-1"
+                                                href="{{ route('asset.barcode.download', $asset) }}"
+                                                title="Descargar código de barras">
+                                                <i class="fas fa-barcode"></i>
+                                            </a>
                                             <a class="btn btn-sm btn-outline-warning btn-action"
-                                                href="{{ route('asset.edit', $asset) }}"><i class="fas fa-edit"></i></a>
+                                                href="{{ route('asset.edit', $asset) }}" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             @if (!$asset->currentAssignment)
-                                                | <form action="{{ route('asset.destroy', $asset) }}" method="POST"
+                                                <form action="{{ route('asset.destroy', $asset) }}" method="POST"
                                                     style="display:inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
                                                         onclick="return confirm('¿Eliminar este activo?')"
-                                                        class="btn btn-sm btn-outline-danger btn-action"><i class="fas fa-trash"></i></button>
+                                                        class="btn btn-sm btn-outline-danger btn-action" title="Eliminar">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 </form>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" style="text-align: center;">No hay activos registrados</td>
+                                        <td colspan="9" style="text-align: center;">No hay activos registrados</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -131,6 +157,89 @@
                     font-size: 12px;
                 }
             </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                    const selectAllBtn = document.getElementById('select-all-btn');
+                    const downloadBtn = document.getElementById('download-barcodes-btn');
+                    const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+
+                    // Función para actualizar el estado del botón de descarga
+                    function updateDownloadButton() {
+                        const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+                        if (checkedBoxes.length > 0) {
+                            downloadBtn.style.display = 'inline-block';
+                        } else {
+                            downloadBtn.style.display = 'none';
+                        }
+                    }
+
+                    // Checkbox de seleccionar todos
+                    selectAllCheckbox.addEventListener('change', function() {
+                        assetCheckboxes.forEach(checkbox => {
+                            checkbox.checked = this.checked;
+                        });
+                        updateDownloadButton();
+                    });
+
+                    // Botón de seleccionar todos
+                    selectAllBtn.addEventListener('click', function() {
+                        const allChecked = Array.from(assetCheckboxes).every(cb => cb.checked);
+                        assetCheckboxes.forEach(checkbox => {
+                            checkbox.checked = !allChecked;
+                        });
+                        selectAllCheckbox.checked = !allChecked;
+                        updateDownloadButton();
+                    });
+
+                    // Checkboxes individuales
+                    assetCheckboxes.forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            const allChecked = Array.from(assetCheckboxes).every(cb => cb.checked);
+                            selectAllCheckbox.checked = allChecked;
+                            updateDownloadButton();
+                        });
+                    });
+
+                    // Descargar códigos de barras seleccionados
+                    downloadBtn.addEventListener('click', function() {
+                        const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+                        const assetIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+                        if (assetIds.length === 0) {
+                            alert('Seleccione al menos un activo');
+                            return;
+                        }
+
+                        // Crear formulario temporal para enviar la solicitud
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route('asset.barcode.download-multiple') }}';
+                        form.style.display = 'none';
+
+                        // Token CSRF
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = '_token';
+                        csrfInput.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfInput);
+
+                        // IDs de activos
+                        assetIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'asset_ids[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
+
+                        document.body.appendChild(form);
+                        form.submit();
+                        document.body.removeChild(form);
+                    });
+                });
+            </script>
         </div>
     </main>
 @endsection

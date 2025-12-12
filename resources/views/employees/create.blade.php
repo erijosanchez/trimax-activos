@@ -32,7 +32,7 @@
                             <input class="form-control" type="text" name="phone">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Departamento:</label>
+                            <label class="form-label">Area:</label>
                             <input class="form-control" type="text" name="department">
                         </div>
                         <div class="col-md-6">

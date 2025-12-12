@@ -14,6 +14,12 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 // Activos
 Route::resource('asset', AssetController::class);
 
+// Códigos de barras
+Route::get('asset/{asset}/barcode', [AssetController::class, 'generateBarcode'])->name('asset.barcode');
+Route::get('asset/{asset}/barcode/download', [AssetController::class, 'downloadBarcode'])->name('asset.barcode.download');
+Route::post('asset/barcode/download-multiple', [AssetController::class, 'downloadBarcodesPDF'])->name('asset.barcode.download-multiple');
+Route::get('asset-next-code', [AssetController::class, 'getNextCode'])->name('asset.next-code');
+
 // Empleados
 Route::resource('employees', EmployeeController::class);
 

@@ -24,7 +24,7 @@
                                     <th>DNI</th>
                                     <th>Nombre</th>
                                     <th>Email</th>
-                                    <th>Departamento</th>
+                                    <th>Area</th>
                                     <th>Cargo</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
