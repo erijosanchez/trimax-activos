@@ -7,7 +7,19 @@
                 <h2 class="mb-1">Activos</h2>
             </div>
 
-            <div class="mb-3 d-flex gap-2 align-items-center">
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <!-- Buscador con soporte para escaneo -->
+                <div class="input-group" style="max-width: 400px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search-input"
+                        placeholder="Buscar por código (escribe o escanea)..." autofocus>
+                    <button class="btn btn-outline-secondary" type="button" id="clear-search">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
                 <a href="{{ route('reports.assets.export') }}" class="btn btn-warning animated-entry">
                     <i class="fas fa-file-excel"></i> Exportar a Excel
                 </a>
@@ -18,6 +30,14 @@
                 <button type="button" id="select-all-btn" class="btn btn-outline-secondary animated-entry">
                     <i class="fas fa-check-square"></i> Seleccionar Todos
                 </button>
+            </div>
+
+            <!-- Mensaje de búsqueda -->
+            <div id="search-info" class="alert alert-info mb-3" style="display: none;">
+                <i class="fas fa-info-circle"></i>
+                <span id="search-info-text"></span>
+                <button type="button" class="btn-close float-end"
+                    onclick="document.getElementById('search-info').style.display='none'"></button>
             </div>
             <div class="table-card animated-entry" style="animation-delay: 0.5s;">
                 <div class="card-header">
@@ -164,6 +184,16 @@
                     const selectAllBtn = document.getElementById('select-all-btn');
                     const downloadBtn = document.getElementById('download-barcodes-btn');
                     const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+                    const searchInput = document.getElementById('search-input');
+                    const clearSearchBtn = document.getElementById('clear-search');
+                    const searchInfo = document.getElementById('search-info');
+                    const searchInfoText = document.getElementById('search-info-text');
+
+                    // Variables para detección de escaneo
+                    let scanBuffer = '';
+                    let scanTimeout;
+                    const SCAN_SPEED_THRESHOLD = 50; // ms entre caracteres para detectar escaneo
+                    let lastKeyTime = Date.now();
 
                     // Función para actualizar el estado del botón de descarga
                     function updateDownloadButton() {
@@ -177,7 +207,10 @@
 
                     // Checkbox de seleccionar todos
                     selectAllCheckbox.addEventListener('change', function() {
-                        assetCheckboxes.forEach(checkbox => {
+                        const visibleCheckboxes = Array.from(assetCheckboxes).filter(cb => {
+                            return cb.closest('tr').style.display !== 'none';
+                        });
+                        visibleCheckboxes.forEach(checkbox => {
                             checkbox.checked = this.checked;
                         });
                         updateDownloadButton();
@@ -185,8 +218,11 @@
 
                     // Botón de seleccionar todos
                     selectAllBtn.addEventListener('click', function() {
-                        const allChecked = Array.from(assetCheckboxes).every(cb => cb.checked);
-                        assetCheckboxes.forEach(checkbox => {
+                        const visibleCheckboxes = Array.from(assetCheckboxes).filter(cb => {
+                            return cb.closest('tr').style.display !== 'none';
+                        });
+                        const allChecked = visibleCheckboxes.every(cb => cb.checked);
+                        visibleCheckboxes.forEach(checkbox => {
                             checkbox.checked = !allChecked;
                         });
                         selectAllCheckbox.checked = !allChecked;
@@ -196,7 +232,10 @@
                     // Checkboxes individuales
                     assetCheckboxes.forEach(checkbox => {
                         checkbox.addEventListener('change', function() {
-                            const allChecked = Array.from(assetCheckboxes).every(cb => cb.checked);
+                            const visibleCheckboxes = Array.from(assetCheckboxes).filter(cb => {
+                                return cb.closest('tr').style.display !== 'none';
+                            });
+                            const allChecked = visibleCheckboxes.every(cb => cb.checked);
                             selectAllCheckbox.checked = allChecked;
                             updateDownloadButton();
                         });
@@ -237,6 +276,120 @@
                         document.body.appendChild(form);
                         form.submit();
                         document.body.removeChild(form);
+                    });
+
+                    // ========== BUSCADOR CON SOPORTE PARA ESCANEO ==========
+
+                    // Función de búsqueda
+                    function performSearch(searchTerm) {
+                        searchTerm = searchTerm.toLowerCase().trim();
+                        let visibleCount = 0;
+                        let foundAsset = null;
+
+                        assetCheckboxes.forEach(checkbox => {
+                            const row = checkbox.closest('tr');
+                            const code = checkbox.dataset.code.toLowerCase();
+                            const rowText = row.textContent.toLowerCase();
+
+                            if (searchTerm === '' || code.includes(searchTerm) || rowText.includes(searchTerm)) {
+                                row.style.display = '';
+                                visibleCount++;
+                                if (code === searchTerm) {
+                                    foundAsset = row;
+                                }
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+
+                        // Mostrar información de búsqueda
+                        if (searchTerm !== '') {
+                            if (foundAsset) {
+                                searchInfo.className = 'alert alert-success mb-3';
+                                searchInfoText.textContent = `✓ Activo encontrado: ${searchTerm.toUpperCase()}`;
+                                searchInfo.style.display = 'block';
+
+                                // Resaltar el activo encontrado
+                                foundAsset.style.backgroundColor = '#d4edda';
+                                setTimeout(() => {
+                                    foundAsset.style.backgroundColor = '';
+                                }, 3000);
+
+                                // Scroll al activo
+                                foundAsset.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                            } else if (visibleCount > 0) {
+                                searchInfo.className = 'alert alert-info mb-3';
+                                searchInfoText.textContent =
+                                    `Se encontraron ${visibleCount} resultado(s) para: "${searchTerm}"`;
+                                searchInfo.style.display = 'block';
+                            } else {
+                                searchInfo.className = 'alert alert-warning mb-3';
+                                searchInfoText.textContent = `No se encontraron resultados para: "${searchTerm}"`;
+                                searchInfo.style.display = 'block';
+                            }
+                        } else {
+                            searchInfo.style.display = 'none';
+                        }
+
+                        // Actualizar checkbox de seleccionar todos
+                        selectAllCheckbox.checked = false;
+                        updateDownloadButton();
+                    }
+
+                    // Detectar entrada rápida (escaneo de código de barras)
+                    searchInput.addEventListener('keypress', function(e) {
+                        const currentTime = Date.now();
+                        const timeDiff = currentTime - lastKeyTime;
+                        lastKeyTime = currentTime;
+
+                        // Si los caracteres llegan muy rápido, es probablemente un escaneo
+                        if (timeDiff < SCAN_SPEED_THRESHOLD) {
+                            scanBuffer += e.key;
+                        } else {
+                            scanBuffer = e.key;
+                        }
+
+                        // Limpiar el buffer después de un tiempo
+                        clearTimeout(scanTimeout);
+                        scanTimeout = setTimeout(() => {
+                            scanBuffer = '';
+                        }, 200);
+
+                        // Si se presiona Enter después de un escaneo rápido
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const scannedCode = this.value.trim();
+                            if (scannedCode) {
+                                performSearch(scannedCode);
+                            }
+                        }
+                    });
+
+                    // Búsqueda en tiempo real (para escritura manual)
+                    let searchTimeout2;
+                    searchInput.addEventListener('input', function() {
+                        clearTimeout(searchTimeout2);
+                        searchTimeout2 = setTimeout(() => {
+                            performSearch(this.value);
+                        }, 300);
+                    });
+
+                    // Botón limpiar búsqueda
+                    clearSearchBtn.addEventListener('click', function() {
+                        searchInput.value = '';
+                        performSearch('');
+                        searchInput.focus();
+                    });
+
+                    // Limpiar con ESC
+                    searchInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            this.value = '';
+                            performSearch('');
+                        }
                     });
                 });
             </script>

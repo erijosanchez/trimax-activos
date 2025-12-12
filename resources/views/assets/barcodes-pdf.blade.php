@@ -18,7 +18,7 @@
         .barcode-container {
             display: inline-block;
             width: 4.5cm;
-            height: 3cm;
+            height: 2cm;
             border: 1px solid #ddd;
             margin: 0.15cm;
             padding: 0.15cm;
@@ -83,7 +83,6 @@
             
             <div class="code-text">{{ $asset->code }}</div>
             <div class="asset-info">{{ $asset->brand }} - {{ $asset->model }}</div>
-            <div class="category">{{ $asset->category->name }}</div>
         </div>
         
         @if(($index + 1) % 16 == 0 && !$loop->last)
