@@ -77,20 +77,28 @@
                             <textarea class="form-control" name="assignment_observations" rows="3"></textarea>
                         </div>
 
-                        <h5 class="text-primary fw-bold mb-3"> Especificaciones del Audifonos</h5>
+                        <h5 class="text-primary fw-bold mb-3">📄 Documento de Responsabilidad (Opcional)</h5>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nuevo flujo:</strong> Puedes crear la asignación ahora y subir el documento después de
+                            firmarlo.
+                            <br>El sistema generará automáticamente el acta con todos los datos.
+                        </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Número de Documento:</label>
-                            <input class="form-control" type="text" name="document_number" required>
+                            <input class="form-control" type="text" name="document_number"
+                                placeholder="Ej: ACTA-2024-001">
+                            <small class="text-muted">Puedes dejarlo vacío y subirlo después</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Fecha de Firma:</label>
-                            <input class="form-control" type="date" name="signed_date" value="{{ date('Y-m-d') }}"
-                                required>
+                            <input class="form-control" type="date" name="signed_date" value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Archivo PDF del Documento:</label>
-                            <input class="form-control" type="file" name="document_file" accept=".pdf" required>
+                            <input class="form-control" type="file" name="document_file" accept=".pdf">
+                            <small class="text-muted">Opcional - Sube el documento firmado cuando lo tengas</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Notas del Documento:</label>
@@ -98,8 +106,10 @@
                         </div>
 
                         <div class="mt-4 d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i> Guardar</button>
-                            <a href="{{ route('assignments.index') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i>
+                                Guardar</button>
+                            <a href="{{ route('assignments.index') }}"
+                                class="btn btn-outline-secondary px-4">Cancelar</a>
                         </div>
                     </div>
                 </form>

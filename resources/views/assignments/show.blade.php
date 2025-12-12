@@ -3,9 +3,40 @@
 @section('content')
     <main class="main-content" id="mainContent">
         <div class="container-fluid">
-            <div class="mb-4">
-                <h2 class="mb-1">Detalle de Asignación</h2>
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Detalle de Asignación</h2>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('assignments.generate-delivery-document', $assignment) }}"
+                        class="btn btn-success animated-entry">
+                        <i class="fas fa-file-word"></i> Generar Acta de Entrega
+                    </a>
+                    <a href="{{ route('assignments.index') }}" class="btn btn-outline-secondary animated-entry">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
             </div>
+
+            {{-- ALERTAS DE ESTADO DEL DOCUMENTO --}}
+            @if (!$assignment->responsibilityDocument)
+                <div class="alert alert-warning animated-entry" role="alert">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>⚠️ Documento Pendiente:</strong> Esta asignación no tiene acta de responsabilidad
+                            firmada.
+                        </div>
+                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#uploadDocumentModal">
+                            <i class="fas fa-upload"></i> Subir Documento Firmado
+                        </button>
+                    </div>
+                </div>
+            @else
+                <div class="alert alert-success animated-entry" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>✅ Documento Adjunto:</strong> Acta de responsabilidad firmada y archivada.
+                </div>
+            @endif
 
             <div class="row g-3">
                 {{-- INFORMACIÓN DEL ACTIVO --}}
@@ -204,6 +235,74 @@
                         </div>
                     </div>
                 @endif
+            </div>
+
+            {{-- MODAL PARA SUBIR DOCUMENTO --}}
+            <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="uploadDocumentModalLabel">
+                                <i class="fas fa-upload"></i> Subir Acta de Responsabilidad Firmada
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <form action="{{ route('assignments.upload-document', $assignment) }}" method="POST"
+                            enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Instrucciones:</strong>
+                                    <ol class="mb-0 mt-2">
+                                        <li>Descarga el acta usando el botón "Generar Acta de Entrega"</li>
+                                        <li>Imprime el documento</li>
+                                        <li>Haz firmar al empleado</li>
+                                        <li>Escanea el documento firmado en formato PDF</li>
+                                        <li>Sube el PDF escaneado aquí</li>
+                                    </ol>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Número de Documento: *</label>
+                                        <input class="form-control" type="text" name="document_number" required
+                                            placeholder="Ej: ACTA-{{ $assignment->asset->code }}-{{ date('Y') }}">
+                                        <small class="text-muted">Código único para identificar el acta</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha de Firma: *</label>
+                                        <input class="form-control" type="date" name="signed_date"
+                                            value="{{ date('Y-m-d') }}" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Archivo PDF del Documento Firmado: *</label>
+                                        <input class="form-control" type="file" name="document_file" accept=".pdf"
+                                            required>
+                                        <small class="text-muted">
+                                            <i class="fas fa-file-pdf"></i> Solo archivos PDF. Tamaño máximo: 5MB
+                                        </small>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Notas del Documento:</label>
+                                        <textarea class="form-control" name="document_notes" rows="3"
+                                            placeholder="Observaciones adicionales (opcional)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Subir Documento
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
     </main>
 @endsection

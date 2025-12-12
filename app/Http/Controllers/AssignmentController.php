@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\Employee;
 use App\Models\ResponsibilityDocument;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class AssignmentController extends Controller
 {
@@ -19,7 +20,7 @@ class AssignmentController extends Controller
         $assignments = Assignment::with(['asset.category', 'employee'])
             ->latest()
             ->paginate(15);
-        
+
         return view('assignments.index', compact('assignments'));
     }
 
@@ -30,7 +31,7 @@ class AssignmentController extends Controller
     {
         $assets = Asset::where('status', 'available')->with('category')->get();
         $employees = Employee::where('active', true)->get();
-        
+
         return view('assignments.create', compact('assets', 'employees'));
     }
 
@@ -45,9 +46,9 @@ class AssignmentController extends Controller
             'assigned_date' => 'required|date',
             'assignment_observations' => 'nullable|string',
             'condition_on_assignment' => 'required|in:new,good,fair,poor',
-            'document_number' => 'required|string|unique:responsibility_documents',
-            'document_file' => 'required|file|mimes:pdf|max:5120',
-            'signed_date' => 'required|date',
+            'document_number' => 'nullable|string|unique:responsibility_documents',
+            'document_file' => 'nullable|file|mimes:pdf|max:5120',
+            'signed_date' => 'nullable|date',
             'document_notes' => 'nullable|string',
         ]);
 
@@ -67,24 +68,30 @@ class AssignmentController extends Controller
             $asset = Asset::find($validated['asset_id']);
             $asset->update(['status' => 'assigned']);
 
-            // Guardar documento de responsabilidad
-            if ($request->hasFile('document_file')) {
+            // Guardar documento de responsabilidad (si se subió)
+            if ($request->hasFile('document_file') && !empty($validated['document_number'])) {
                 $path = $request->file('document_file')->store('responsibility_documents', 'public');
-                
+
                 ResponsibilityDocument::create([
                     'assignment_id' => $assignment->id,
                     'document_number' => $validated['document_number'],
                     'document_path' => $path,
-                    'signed_date' => $validated['signed_date'],
+                    'signed_date' => $validated['signed_date'] ?? now(),
                     'notes' => $validated['document_notes'] ?? null,
                 ]);
             }
 
             DB::commit();
 
-            return redirect()->route('assignments.show', $assignment)
-                ->with('success', 'Asignación creada exitosamente');
-                
+            // Mensaje según si subió documento o no
+            if ($request->hasFile('document_file')) {
+                return redirect()->route('assignments.show', $assignment)
+                    ->with('success', 'Asignación creada exitosamente con documento adjunto.');
+            } else {
+                return redirect()->route('assignments.show', $assignment)
+                    ->with('success', 'Asignación creada exitosamente. Descarga el acta, haz firmar y sube el documento.')
+                    ->with('show_download_button', true);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error al crear la asignación: ' . $e->getMessage());
@@ -97,7 +104,7 @@ class AssignmentController extends Controller
     public function show(Assignment $assignment)
     {
         $assignment->load(['asset.category', 'employee', 'responsibilityDocument']);
-        
+
         return view('assignments.show', compact('assignment'));
     }
 
@@ -126,10 +133,122 @@ class AssignmentController extends Controller
 
             return redirect()->route('assignments.show', $assignment)
                 ->with('success', 'Devolución registrada exitosamente');
-                
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error al registrar devolución: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar acta de entrega en formato DOCX rellenada automáticamente
+     */
+    public function generateDeliveryDocument(Assignment $assignment)
+    {
+        // Cargar plantilla
+        $templatePath = storage_path('app/templates/acta_entrega_template.docx');
+
+        if (!file_exists($templatePath)) {
+            return back()->with('error', 'Plantilla de acta no encontrada. Por favor contacte al administrador.');
+        }
+
+        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+        // Rellenar datos del empleado
+        $templateProcessor->setValue('empleado_nombre', $assignment->employee->full_name);
+        $templateProcessor->setValue('empleado_dni', $assignment->employee->dni);
+        $templateProcessor->setValue('empleado_cargo', $assignment->employee->position ?? '');
+        $templateProcessor->setValue('empleado_area', $assignment->employee->department ?? '');
+
+        // Rellenar datos del activo
+        $asset = $assignment->asset;
+        $templateProcessor->setValue('equipo_tipo', $asset->category->name);
+        $templateProcessor->setValue('equipo_codigo', $asset->code);
+        $templateProcessor->setValue('equipo_marca', $asset->brand);
+        $templateProcessor->setValue('equipo_modelo', $asset->model);
+        $templateProcessor->setValue('equipo_serie', $asset->serial_number ?? 'N/A');
+
+        // Datos específicos según tipo de equipo
+        if (strtolower($asset->category->name) === 'laptop' || strtolower($asset->category->name) === 'pc') {
+            $templateProcessor->setValue('equipo_ram', $asset->ram ?? 'N/A');
+            $templateProcessor->setValue('equipo_procesador', $asset->processor ?? 'N/A');
+        } else {
+            $templateProcessor->setValue('equipo_ram', 'N/A');
+            $templateProcessor->setValue('equipo_procesador', 'N/A');
+        }
+
+        // Para celulares
+        if (strtolower($asset->category->name) === 'celular') {
+            $templateProcessor->setValue('celular_linea', $asset->phone ?? '');
+            $templateProcessor->setValue('celular_imei', $asset->imei ?? '');
+        } else {
+            $templateProcessor->setValue('celular_linea', '');
+            $templateProcessor->setValue('celular_imei', '');
+        }
+
+        // Fechas
+        $templateProcessor->setValue('fecha_entrega', $assignment->assigned_date->format('d/m/Y'));
+        $templateProcessor->setValue('fecha_actual', date('d/m/Y'));
+
+        // Condición del equipo
+        $condiciones = [
+            'new' => 'Nuevo',
+            'good' => 'Bueno',
+            'fair' => 'Regular',
+            'poor' => 'Malo'
+        ];
+        $templateProcessor->setValue('condicion_equipo', $condiciones[$assignment->condition_on_assignment] ?? 'Bueno');
+
+        // Observaciones
+        $templateProcessor->setValue('observaciones_entrega', $assignment->assignment_observations ?? 'Ninguna');
+
+        // Generar nombre del archivo
+        $fileName = 'Acta_Entrega_' . $asset->code . '_' . date('Ymd') . '.docx';
+        $tempFile = storage_path('app/temp/' . $fileName);
+
+        // Crear directorio temp si no existe
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        // Guardar archivo
+        $templateProcessor->saveAs($tempFile);
+
+        // Descargar
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Subir documento de responsabilidad después de crear la asignación
+     */
+    public function uploadDocument(Request $request, Assignment $assignment)
+    {
+        $validated = $request->validate([
+            'document_number' => 'required|string|unique:responsibility_documents',
+            'document_file' => 'required|file|mimes:pdf|max:5120',
+            'signed_date' => 'required|date',
+            'document_notes' => 'nullable|string',
+        ]);
+
+        try {
+            // Verificar que no tenga documento ya
+            if ($assignment->responsibilityDocument) {
+                return back()->with('error', 'Esta asignación ya tiene un documento adjunto.');
+            }
+
+            $path = $request->file('document_file')->store('responsibility_documents', 'public');
+
+            ResponsibilityDocument::create([
+                'assignment_id' => $assignment->id,
+                'document_number' => $validated['document_number'],
+                'document_path' => $path,
+                'signed_date' => $validated['signed_date'],
+                'notes' => $validated['document_notes'] ?? null,
+            ]);
+
+            return redirect()->route('assignments.show', $assignment)
+                ->with('success', 'Documento de responsabilidad subido exitosamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al subir el documento: ' . $e->getMessage());
         }
     }
 }

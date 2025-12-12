@@ -27,6 +27,10 @@ Route::resource('employees', EmployeeController::class);
 Route::resource('assignments', AssignmentController::class);
 Route::post('assignments/{assignment}/return', [AssignmentController::class, 'returnAsset'])
     ->name('assignments.return');
+Route::get('assignments/{assignment}/generate-delivery-document', [AssignmentController::class, 'generateDeliveryDocument'])
+    ->name('assignments.generate-delivery-document');
+Route::post('assignments/{assignment}/upload-document', [AssignmentController::class, 'uploadDocument'])
+    ->name('assignments.upload-document');
 
 // Reportes
 // Reportes
