@@ -10,8 +10,12 @@ class ResponsibilityDocument extends Model
     use HasFactory;
 
     protected $fillable = [
-        'assignment_id', 'document_number', 'document_path',
-        'signed_date', 'notes'
+        'assignment_id',
+        'document_type',
+        'document_number',
+        'document_path',
+        'signed_date',
+        'notes'
     ];
 
     protected $casts = [

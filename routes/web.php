@@ -29,6 +29,8 @@ Route::post('assignments/{assignment}/return', [AssignmentController::class, 're
     ->name('assignments.return');
 Route::get('assignments/{assignment}/generate-delivery-document', [AssignmentController::class, 'generateDeliveryDocument'])
     ->name('assignments.generate-delivery-document');
+Route::get('assignments/{assignment}/generate-return-document', [AssignmentController::class, 'generateReturnDocument'])
+    ->name('assignments.generate-return-document');
 Route::post('assignments/{assignment}/upload-document', [AssignmentController::class, 'uploadDocument'])
     ->name('assignments.upload-document');
 
@@ -40,4 +42,4 @@ Route::get('/reports/assignments/export', [ReportController::class, 'exportAssig
 Route::get('/reports/employees/export', [ReportController::class, 'exportEmployees'])->name('reports.employees.export');
 Route::get('/reports/asset/{asset}/history/export', [ReportController::class, 'exportAssetHistory'])->name('reports.asset.history.export');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
