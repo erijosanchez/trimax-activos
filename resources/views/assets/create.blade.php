@@ -7,6 +7,26 @@
                 <h2 class="mb-1">Nuevo Activo</h2>
             </div>
 
+            {{-- MENSAJES DE ERROR --}}
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>¡Error!</strong> Por favor corrige los siguientes errores:
+                    <ul class="mb-0 mt-2">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>¡Error!</strong> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             <div class="table-card animated-entry" style="animation-delay: 0.5s;">
                 <form action="{{ route('asset.store') }}" method="POST" class="needs-validation form-control p-4"
                     id="assetForm">
@@ -86,8 +106,8 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Procesador: *</label>
-                                <input class="form-control" type="text" name="processor" value="{{ old('processor') }}"
-                                    placeholder="Ej: Intel Core i7-10700K">
+                                <input class="form-control" type="text" name="processor"
+                                    value="{{ old('processor') }}" placeholder="Ej: Intel Core i7-10700K">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Memoria RAM: *</label>
@@ -171,7 +191,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tipo de Conexión: *</label>
-                                <select class="form-select" name="connection_type">
+                                <select class="form-select" name="connection_type" id="peripheral_connection_type">
                                     <option value="">Seleccionar</option>
                                     <option value="USB">USB</option>
                                     <option value="Bluetooth">Bluetooth</option>
@@ -180,8 +200,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">¿Es inalámbrico?: *</label>
-                                <select class="form-select" name="is_wireless">
+                                <label class="form-label">¿Es inalámbrico?:</label>
+                                <select class="form-select" name="is_wireless" id="peripheral_is_wireless">
                                     <option value="">Seleccionar</option>
                                     <option value="1">Sí</option>
                                     <option value="0">No</option>
@@ -196,7 +216,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tipo de Conexión: *</label>
-                                <select class="form-select" name="connection_type">
+                                <select class="form-select" name="connection_type" id="headphone_connection_type">
                                     <option value="">Seleccionar</option>
                                     <option value="USB">USB</option>
                                     <option value="Bluetooth">Bluetooth</option>
@@ -205,8 +225,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">¿Es inalámbrico?: *</label>
-                                <select class="form-select" name="is_wireless">
+                                <label class="form-label">¿Es inalámbrico?:</label>
+                                <select class="form-select" name="is_wireless" id="headphone_is_wireless">
                                     <option value="">Seleccionar</option>
                                     <option value="1">Sí</option>
                                     <option value="0">No</option>
@@ -223,7 +243,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">¿Tiene micrófono?: *</label>
+                                <label class="form-label">¿Tiene micrófono?:</label>
                                 <select class="form-select" name="has_microphone">
                                     <option value="">Seleccionar</option>
                                     <option value="1">Sí</option>
@@ -312,25 +332,26 @@
                 },
                 'mouse': {
                     container: 'peripheral-fields',
-                    required: ['connection_type', 'is_wireless']
+                    required: ['connection_type']
                 },
                 'teclado': {
                     container: 'peripheral-fields',
-                    required: ['connection_type', 'is_wireless']
+                    required: ['connection_type']
                 },
                 'audífonos': {
                     container: 'headphone-fields',
-                    required: ['connection_type', 'is_wireless', 'audio_type', 'has_microphone']
+                    required: ['connection_type', 'audio_type']
                 }
             };
 
             function toggleFields() {
-                // Ocultar todos los campos y quitar requeridos
+                // Ocultar todos los campos y quitar requeridos Y DESHABILITARLOS
                 allCategoryFields.forEach(fieldGroup => {
                     fieldGroup.style.display = 'none';
                     const inputs = fieldGroup.querySelectorAll('input, select');
                     inputs.forEach(input => {
                         input.removeAttribute('required');
+                        input.setAttribute('disabled', 'disabled'); // DESHABILITAR campos ocultos
                     });
                 });
 
@@ -340,12 +361,17 @@
                 if (categoryName && fieldMappings[categoryName]) {
                     const mapping = fieldMappings[categoryName];
 
-                    // Mostrar contenedores
+                    // Mostrar contenedores y HABILITAR campos
                     const containers = Array.isArray(mapping.container) ? mapping.container : [mapping.container];
                     containers.forEach(containerId => {
                         const container = document.getElementById(containerId);
                         if (container) {
                             container.style.display = 'block';
+                            // HABILITAR todos los campos del contenedor visible
+                            const inputs = container.querySelectorAll('input, select');
+                            inputs.forEach(input => {
+                                input.removeAttribute('disabled');
+                            });
                         }
                     });
 

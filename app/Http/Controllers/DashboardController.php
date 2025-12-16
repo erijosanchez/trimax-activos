@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $recent_assignments = Assignment::with(['asset', 'employee'])
             ->where('is_active', true)
             ->latest()
-            ->take(5)
+            ->take(25)
             ->get();
 
         return view('dashboard', compact('stats', 'recent_assignments'));
