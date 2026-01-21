@@ -16,7 +16,7 @@ class AssetController extends Controller
     {
         $assets = Asset::with(['category', 'currentAssignment.employee'])
             ->latest()
-            ->paginate(15);
+            ->paginate(50);
 
         return view('assets.index', compact('assets'));
     }
