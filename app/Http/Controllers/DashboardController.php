@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Asset;
 use App\Models\Employee;
 use App\Models\Assignment;
+use App\Models\Category;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -19,12 +21,25 @@ class DashboardController extends Controller
             'active_assignments' => Assignment::where('is_active', true)->count(),
         ];
 
-        $recent_assignments = Assignment::with(['asset', 'employee'])
+        $recent_assignments = Assignment::with(['asset.category', 'employee'])
             ->where('is_active', true)
             ->latest()
-            ->take(25)
+            ->take(10)
             ->get();
 
-        return view('dashboard', compact('stats', 'recent_assignments'));
+        // Estadísticas por categoría para el gráfico
+        $category_stats = Asset::select('category_id', DB::raw('count(*) as count'))
+            ->groupBy('category_id')
+            ->with('category')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->category->name,
+                    'count' => $item->count
+                ];
+            });
+
+        return view('dashboard', compact('stats', 'recent_assignments', 'category_stats'));
     }
 }
+
