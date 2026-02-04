@@ -20,12 +20,18 @@ class CategorySeeder extends Seeder
             ['name' => 'Mouse', 'description' => 'Ratones y dispositivos señaladores'],
             ['name' => 'Teclado', 'description' => 'Teclados y accesorios de entrada'],
             ['name' => 'Audífonos', 'description' => 'Auriculares y headsets'],
+            ['name' => 'Parlantes', 'description' => 'Altavoces y equipos de sonido'],
             ['name' => 'Monitor', 'description' => 'Pantallas y displays'],
             ['name' => 'Tablet', 'description' => 'Tabletas electrónicas'],
+            ['name' => 'Impresora', 'description' => 'Impresoras y escáneres'],
+            ['name' => 'Proyector', 'description' => 'Proyectores y equipos de presentación'],
         ];
 
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::updateOrCreate(
+                ['name' => $category['name']],
+                $category
+            );
         }
     }
 }

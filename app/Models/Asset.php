@@ -47,7 +47,17 @@ class Asset extends Model
 
         // Campos para audífonos
         'audio_type',
-        'has_microphone'
+        'has_microphone',
+
+        // Campos para parlantes
+        'power_watts',
+        'frequency_response',
+        'has_bluetooth',
+        'battery_life',
+
+        // Campos generales
+        'warranty_until',
+        'condition',
     ];
 
     protected $casts = [
@@ -55,6 +65,7 @@ class Asset extends Model
         'purchase_price' => 'decimal:2',
         'is_wireless' => 'boolean',
         'has_microphone' => 'boolean',
+        'has_bluetooth' => 'boolean',
     ];
 
     protected static function boot()
@@ -131,5 +142,71 @@ class Asset extends Model
             ->sum(function ($assignment) {
                 return $assignment->assigned_date->diffInDays($assignment->returned_date);
             });
+    }
+
+    // Relaciones de mantenimiento
+    public function maintenanceSchedule()
+    {
+        return $this->hasOne(MaintenanceSchedule::class);
+    }
+
+    public function maintenances()
+    {
+        return $this->hasMany(Maintenance::class);
+    }
+
+    public function lastMaintenance()
+    {
+        return $this->hasOne(Maintenance::class)->where('status', 'completado')->latest('completed_date');
+    }
+
+    public function upcomingMaintenances()
+    {
+        return $this->hasMany(Maintenance::class)
+            ->where('status', 'programado')
+            ->where('scheduled_date', '>=', now())
+            ->orderBy('scheduled_date');
+    }
+
+    /**
+     * Verificar si necesita mantenimiento
+     */
+    public function needsMaintenance(): bool
+    {
+        if (!$this->maintenanceSchedule || !$this->maintenanceSchedule->is_active) {
+            return false;
+        }
+        
+        return $this->maintenanceSchedule->isOverdue() || $this->maintenanceSchedule->isUpcoming();
+    }
+
+    /**
+     * Obtener el nombre de la condición
+     */
+    public function getConditionNameAttribute(): string
+    {
+        return match($this->condition) {
+            'nuevo' => 'Nuevo',
+            'bueno' => 'Bueno',
+            'regular' => 'Regular',
+            'malo' => 'Malo',
+            'reparacion' => 'En Reparación',
+            default => 'Desconocido',
+        };
+    }
+
+    /**
+     * Obtener clase de color según condición
+     */
+    public function getConditionColorAttribute(): string
+    {
+        return match($this->condition) {
+            'nuevo' => 'primary',
+            'bueno' => 'success',
+            'regular' => 'warning',
+            'malo' => 'danger',
+            'reparacion' => 'info',
+            default => 'secondary',
+        };
     }
 }
