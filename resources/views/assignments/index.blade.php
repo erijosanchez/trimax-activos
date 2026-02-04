@@ -1,202 +1,212 @@
 @extends('layouts.app')
 
+@section('title', 'Asignaciones')
+
+@section('breadcrumb')
+    <li class="breadcrumb-item active">Asignaciones</li>
+@endsection
+
 @section('content')
-    <main class="main-content" id="mainContent">
-        <div class="container-fluid">
-            <div class="mb-4">
-                <h2 class="mb-1">Asignaciones</h2>
-            </div>
-            <div class="mb-3">
-                <div class="input-group" style="max-width: 500px;">
-                    <span class="input-group-text">
+<div class="page-header">
+    <h1 class="page-title">Asignaciones</h1>
+    <p class="page-subtitle">Gestión de asignaciones de activos a empleados</p>
+</div>
+
+<!-- Search Box -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-end">
+            <div class="col-md-8">
+                <label class="form-label">
+                    <i class="fas fa-search me-2"></i>Buscar Asignación
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" class="form-control" id="assignment-search-input"
-                        placeholder="Buscar por código de activo, empleado o DNI..." autofocus>
+                    <input type="text" 
+                           class="form-control" 
+                           id="assignment-search-input"
+                           placeholder="Buscar por código de activo, empleado o DNI..." 
+                           autofocus>
                     <button class="btn btn-outline-secondary" type="button" id="clear-assignment-search">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <small class="text-muted">
-                    <i class="fas fa-barcode"></i> Puedes escanear el código de barras del activo
+                    <i class="fas fa-barcode me-1"></i>Puedes escanear el código de barras del activo
                 </small>
             </div>
-
-            <div id="assignment-search-info" class="alert alert-info mb-3" style="display: none;">
-                <i class="fas fa-info-circle"></i>
-                <span id="assignment-search-info-text"></span>
-                <button type="button" class="btn-close float-end"
-                    onclick="document.getElementById('assignment-search-info').style.display='none'"></button>
-            </div>
-
-            <div class="table-card animated-entry" style="animation-delay: 0.5s;">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Lista de asignaciones</h5>
-                        <a href="{{ route('assignments.create') }}" class="btn btn-primary btn-sm mt-2 mt-md-0">
-                            <i class="fas fa-plus me-2"></i>Nueva Asignación
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Activo</th>
-                                    <th>Empleado</th>
-                                    <th>Fecha Asignación</th>
-                                    <th>Fecha Devolución</th>
-                                    <th>Días Uso</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($assignments as $assignment)
-                                    <tr class="assignment-row" data-asset-code="{{ $assignment->asset->code }}"
-                                        data-employee="{{ strtolower($assignment->employee->full_name) }}"
-                                        data-dni="{{ $assignment->employee->dni }}">
-                                        <td>{{ $assignment->asset->code }} - {{ $assignment->asset->brand }}
-                                            {{ $assignment->asset->model }}
-                                        </td>
-                                        <td>{{ $assignment->employee->full_name }}</td>
-                                        <td>{{ $assignment->assigned_date->format('d/m/Y') }}</td>
-                                        <td>{{ $assignment->returned_date?->format('d/m/Y') ?? 'En uso' }}</td>
-                                        <td>{{ $assignment->usage_days }} días</td>
-                                        <td>{{ $assignment->is_active ? 'Activo' : 'Finalizado' }}</td>
-                                        <td>
-                                            <a href="{{ route('assignments.show', $assignment) }}"
-                                                class="btn btn-sm btn-outline-primary btn-action me-1"><i
-                                                    class="fas fa-eye"></i></a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="col-md-4 mt-3 mt-md-0">
+                <a href="{{ route('assignments.create') }}" class="btn btn-primary w-100">
+                    <i class="fas fa-plus me-2"></i>Nueva Asignación
+                </a>
             </div>
         </div>
-    </main>
-    {{ $assignments->links() }}
+    </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('assignment-search-input');
-            const clearSearchBtn = document.getElementById('clear-assignment-search');
-            const searchInfo = document.getElementById('assignment-search-info');
-            const searchInfoText = document.getElementById('assignment-search-info-text');
-            const assignmentRows = document.querySelectorAll('.assignment-row');
+<!-- Search Info Alert -->
+<div id="assignment-search-info" class="alert alert-info mb-4" style="display: none;">
+    <i class="fas fa-info-circle me-2"></i>
+    <span id="assignment-search-info-text"></span>
+    <button type="button" class="btn-close" aria-label="Close"
+        onclick="document.getElementById('assignment-search-info').style.display='none'"></button>
+</div>
 
-            // Variables para detección de escaneo
-            let scanBuffer = '';
-            let scanTimeout;
-            const SCAN_SPEED_THRESHOLD = 50;
-            let lastKeyTime = Date.now();
+<!-- Assignments Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Lista de Asignaciones</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="assignments-table">
+                <thead style="background: #f8fafc;">
+                    <tr>
+                        <th class="border-0">Código</th>
+                        <th class="border-0">Activo</th>
+                        <th class="border-0">Empleado</th>
+                        <th class="border-0">Fecha Asignación</th>
+                        <th class="border-0">Fecha Devolución</th>
+                        <th class="border-0">Días Uso</th>
+                        <th class="border-0">Estado</th>
+                        <th class="border-0 text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($assignments as $assignment)
+                    <tr class="assignment-row" 
+                        data-asset-code="{{ $assignment->asset->code }}"
+                        data-employee="{{ strtolower($assignment->employee->full_name) }}"
+                        data-dni="{{ $assignment->employee->dni }}">
+                        <td class="fw-bold">{{ $assignment->asset->code }}</td>
+                        <td>
+                            <div>
+                                <div class="fw-medium">{{ $assignment->asset->brand }} {{ $assignment->asset->model }}</div>
+                                <small class="text-muted">{{ $assignment->asset->category->name }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div>{{ $assignment->employee->full_name }}</div>
+                                <small class="text-muted">DNI: {{ $assignment->employee->dni }}</small>
+                            </div>
+                        </td>
+                        <td>{{ $assignment->assigned_date->format('d/m/Y') }}</td>
+                        <td>{{ $assignment->returned_date?->format('d/m/Y') ?? 'En uso' }}</td>
+                        <td>
+                            <span class="badge" style="background: #dbeafe; color: #1e40af;">
+                                {{ $assignment->usage_days }} días
+                            </span>
+                        </td>
+                        <td>
+                            @if($assignment->is_active)
+                                <span class="badge" style="background: #d1fae5; color: #065f46;">
+                                    <i class="fas fa-check-circle me-1"></i>Activo
+                                </span>
+                            @else
+                                <span class="badge" style="background: #f3f4f6; color: #374151;">
+                                    <i class="fas fa-times-circle me-1"></i>Finalizado
+                                </span>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ route('assignments.show', $assignment) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No hay asignaciones registradas</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if($assignments->hasPages())
+    <div class="card-footer">
+        {{ $assignments->links() }}
+    </div>
+    @endif
+</div>
 
-            function performSearch(searchTerm) {
-                searchTerm = searchTerm.toLowerCase().trim();
-                let visibleCount = 0;
-                let foundExact = false;
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('assignment-search-input');
+    const clearSearchBtn = document.getElementById('clear-assignment-search');
+    const searchInfo = document.getElementById('assignment-search-info');
+    const searchInfoText = document.getElementById('assignment-search-info-text');
+    const assignmentRows = document.querySelectorAll('.assignment-row');
 
-                assignmentRows.forEach(row => {
-                    const assetCode = row.dataset.assetCode.toLowerCase();
-                    const employee = row.dataset.employee;
-                    const dni = row.dataset.dni;
+    // Variables para detección de escaneo
+    let scanBuffer = '';
+    let scanTimeout;
+    const SCAN_TIMEOUT = 100; // ms entre caracteres del escáner
 
-                    if (searchTerm === '' ||
-                        assetCode.includes(searchTerm) ||
-                        employee.includes(searchTerm) ||
-                        dni.includes(searchTerm)) {
-                        row.style.display = '';
-                        visibleCount++;
-
-                        if (assetCode === searchTerm) {
-                            foundExact = true;
-                            row.style.backgroundColor = '#d4edda';
-                            setTimeout(() => {
-                                row.style.backgroundColor = '';
-                            }, 3000);
-                            row.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-                        }
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-
-                if (searchTerm !== '') {
-                    if (foundExact) {
-                        searchInfo.className = 'alert alert-success mb-3';
-                        searchInfoText.textContent =
-                            `✓ Asignación encontrada para el activo: ${searchTerm.toUpperCase()}`;
-                        searchInfo.style.display = 'block';
-                    } else if (visibleCount > 0) {
-                        searchInfo.className = 'alert alert-info mb-3';
-                        searchInfoText.textContent =
-                            `Se encontraron ${visibleCount} asignación(es) que coinciden con: "${searchTerm}"`;
-                        searchInfo.style.display = 'block';
-                    } else {
-                        searchInfo.className = 'alert alert-warning mb-3';
-                        searchInfoText.textContent = `No se encontraron asignaciones para: "${searchTerm}"`;
-                        searchInfo.style.display = 'block';
-                    }
-                } else {
-                    searchInfo.style.display = 'none';
-                }
+    // Detección de escaneo de código de barras
+    searchInput.addEventListener('keypress', function(e) {
+        clearTimeout(scanTimeout);
+        scanBuffer += e.key;
+        
+        scanTimeout = setTimeout(function() {
+            if (scanBuffer.length >= 8) { // Códigos de barras son generalmente más largos
+                searchInput.value = scanBuffer;
+                performSearch();
+                searchInfo.style.display = 'block';
+                searchInfoText.textContent = 'Código escaneado: ' + scanBuffer;
             }
+            scanBuffer = '';
+        }, SCAN_TIMEOUT);
+    });
 
-            // Detectar escaneo rápido
-            searchInput.addEventListener('keypress', function(e) {
-                const currentTime = Date.now();
-                const timeDiff = currentTime - lastKeyTime;
-                lastKeyTime = currentTime;
+    // Búsqueda en tiempo real
+    searchInput.addEventListener('input', performSearch);
 
-                if (timeDiff < SCAN_SPEED_THRESHOLD) {
-                    scanBuffer += e.key;
-                } else {
-                    scanBuffer = e.key;
-                }
+    // Botón limpiar búsqueda
+    clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInfo.style.display = 'none';
+        assignmentRows.forEach(row => row.style.display = '');
+    });
 
-                clearTimeout(scanTimeout);
-                scanTimeout = setTimeout(() => {
-                    scanBuffer = '';
-                }, 200);
+    function performSearch() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let foundCount = 0;
 
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const code = this.value.trim();
-                    if (code) {
-                        performSearch(code);
-                    }
-                }
-            });
+        assignmentRows.forEach(row => {
+            const assetCode = row.dataset.assetCode.toLowerCase();
+            const employee = row.dataset.employee;
+            const dni = row.dataset.dni;
 
-            // Búsqueda en tiempo real
-            let searchTimeout2;
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout2);
-                searchTimeout2 = setTimeout(() => {
-                    performSearch(this.value);
-                }, 300);
-            });
-
-            clearSearchBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                performSearch('');
-                searchInput.focus();
-            });
-
-            searchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    this.value = '';
-                    performSearch('');
-                }
-            });
+            if (assetCode.includes(searchTerm) || 
+                employee.includes(searchTerm) || 
+                dni.includes(searchTerm)) {
+                row.style.display = '';
+                foundCount++;
+            } else {
+                row.style.display = 'none';
+            }
         });
-    </script>
+
+        if (searchTerm && foundCount === 0) {
+            searchInfo.style.display = 'block';
+            searchInfoText.textContent = 'No se encontraron resultados para: ' + searchTerm;
+        } else if (searchTerm) {
+            searchInfo.style.display = 'block';
+            searchInfoText.textContent = foundCount + ' asignación(es) encontrada(s)';
+        } else {
+            searchInfo.style.display = 'none';
+        }
+    }
+});
+</script>
+@endpush
 @endsection

@@ -18,7 +18,9 @@ class AssetController extends Controller
             ->latest()
             ->paginate(50);
 
-        return view('assets.index', compact('assets'));
+        $categories = Category::all();
+
+        return view('assets.index', compact('assets', 'categories'));
     }
 
     /**

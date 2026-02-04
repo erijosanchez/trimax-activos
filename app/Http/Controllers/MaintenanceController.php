@@ -45,12 +45,16 @@ class MaintenanceController extends Controller
 
         $maintenances = $query->paginate(15);
 
-        // Estadísticas
+        // Estadísticas COMPLETAS
         $stats = [
             'total' => Maintenance::count(),
             'programado' => Maintenance::where('status', 'programado')->count(),
             'en_proceso' => Maintenance::where('status', 'en_proceso')->count(),
             'completado' => Maintenance::where('status', 'completado')->count(),
+            'completados_mes' => Maintenance::where('status', 'completado')
+                ->whereMonth('completed_date', now()->month)
+                ->whereYear('completed_date', now()->year)
+                ->count(),
             'vencidos' => Maintenance::where('status', 'programado')
                 ->where('scheduled_date', '<', now())
                 ->count(),
