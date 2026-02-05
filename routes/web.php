@@ -82,7 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Gestionar mantenimientos - solo Admin y TI
         Route::middleware(CheckRole::class . ':admin,ti')->group(function () {
-            Route::get('/create', [MaintenanceController::class, 'create'])->name('create');
+            Route::get('/create/new', [MaintenanceController::class, 'createnew'])->name('create.new');
             Route::post('/', [MaintenanceController::class, 'store'])->name('store');
             Route::get('/{maintenance}/edit', [MaintenanceController::class, 'edit'])->name('edit');
             Route::put('/{maintenance}', [MaintenanceController::class, 'update'])->name('update');

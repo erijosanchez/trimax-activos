@@ -68,7 +68,7 @@ class MaintenanceController extends Controller
     /**
      * Show the form for creating a new maintenance.
      */
-    public function create()
+    public function createnew()
     {
         $assets = Asset::with('maintenanceSchedule')->orderBy('code')->get();
         $technicians = User::where('role', User::ROLE_TI)
