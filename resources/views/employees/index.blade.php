@@ -119,8 +119,8 @@
             </div>
         </div>
         @if ($employees->hasPages())
-            <div class="card-footer">
-                {{ $employees->links() }}
+            <div class="card-footer bg-white text-center py-3">
+                {{ $employees->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>
