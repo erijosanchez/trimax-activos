@@ -416,8 +416,8 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 **Erick** - Desarrollador Full Stack
 
-- GitHub: [@tu-usuario](https://github.com/erijosanchez)
-- LinkedIn: [Tu Perfil](https://www.linkedin.com/in/erick-jos%C3%A9-s%C3%A1nchez-pinedo-5719802a6)
+- GitHub: [@erijo](https://github.com/erijosanchez)
+- LinkedIn: [Erick](https://www.linkedin.com/in/erick-jos%C3%A9-s%C3%A1nchez-pinedo-5719802a6)
 - Email: joseericksanchez7@gmail.com
 
 ## 🙏 Agradecimientos
