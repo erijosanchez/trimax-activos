@@ -416,9 +416,9 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 **Erick** - Desarrollador Full Stack
 
-- GitHub: [@tu-usuario](https://github.com/tu-usuario)
-- LinkedIn: [Tu Perfil](https://linkedin.com/in/tu-perfil)
-- Email: erick@trimax.com.pe
+- GitHub: [@tu-usuario](https://github.com/erijosanchez)
+- LinkedIn: [Tu Perfil](https://www.linkedin.com/in/erick-jos%C3%A9-s%C3%A1nchez-pinedo-5719802a6)
+- Email: joseericksanchez7@gmail.com
 
 ## 🙏 Agradecimientos
 
@@ -427,13 +427,6 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 - [Font Awesome](https://fontawesome.com) - Iconos
 - [Chart.js](https://www.chartjs.org) - Gráficos
 - Laboratorio Óptico Trimax Perú
-
-## 📞 Soporte
-
-Para soporte o consultas:
-- Abre un issue en GitHub
-- Email: soporte@trimax.com.pe
-- Documentación: [Wiki del proyecto](https://github.com/tu-usuario/trimax-activos/wiki)
 
 ---
 
